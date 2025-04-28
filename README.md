@@ -1,6 +1,3 @@
-# Project Name
-Deskripsi singkat tentang proyekmu. Jelaskan tujuan, fitur utama, dan lainnya yang relevan dengan aplikasi ini.
-
 # Documentation
 https://documenter.getpostman.com/view/39406394/2sB2j1hXrb
 
