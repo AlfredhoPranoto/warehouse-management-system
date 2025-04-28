@@ -29,6 +29,7 @@ export const router = createBrowserRouter([
   {
     path: "/inventory/create",
     element: <CreateProductPage />,
+    loader:roleMiddleware
   },
   {
     path: "/inventory/edit/:id",
