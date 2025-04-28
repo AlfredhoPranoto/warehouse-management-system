@@ -25,37 +25,10 @@ import { randomId } from "@mui/x-data-grid-generator";
 import Sidebar from "../components/Fragments/Sidebar";
 import { TextField } from "@mui/material";
 import { useDebounce } from "../hooks/useDebounce";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const initialRows: GridRowsProp = [
-  {
-    id: randomId(),
-    firstName: "Albert",
-    lastName: "Santoso",
-    age: 20,
-    warehouse: "A",
-  },
-  {
-    id: randomId(),
-    firstName: "Budi",
-    lastName: "Mahfudin",
-    age: 22,
-    warehouse: "B",
-  },
-  {
-    id: randomId(),
-    firstName: "Ian",
-    lastName: "Hup",
-    age: 20,
-    warehouse: "A",
-  },
-  {
-    id: randomId(),
-    firstName: "Bryan",
-    lastName: "Tanujaya",
-    age: 20,
-    warehouse: "C",
-  },
-];
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 declare module "@mui/x-data-grid" {
   interface ToolbarPropsOverrides {
@@ -68,47 +41,80 @@ declare module "@mui/x-data-grid" {
   }
 }
 
-function EditToolbar(props: GridSlotProps["toolbar"]) {
-  const { setRows, setFilteredRows, setRowModesModel, clearSearch } = props;
+// function EditToolbar(props: GridSlotProps["toolbar"]) {
+//   const { setRows, setFilteredRows, setRowModesModel, clearSearch } = props;
 
-  const handleClick = () => {
-    clearSearch();
+//   const handleClick = () => {
+//     clearSearch();
 
-    const id = randomId();
-    const newRow = {
-      id,
-      name: "",
-      description: "",
-      price: "",
-      stock: "",
-      warehouse: "",
-    };
+//     const id = randomId();
+//     const newRow = {
+//       id,
+//       name: "",
+//       description: "",
+//       price: "",
+//       stock: "",
+//       warehouse: "",
+//     };
 
-    setRows((oldRows) => [...oldRows, newRow]);
-    setFilteredRows((oldRows) => [...oldRows, newRow]);
+//     setRows((oldRows) => [...oldRows, newRow]);
+//     setFilteredRows((oldRows) => [...oldRows, newRow]);
 
-    setRowModesModel((oldModel) => ({
-      ...oldModel,
-      [id]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
-    }));
-  };
+//     setRowModesModel((oldModel) => ({
+//       ...oldModel,
+//       [id]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
+//     }));
+//   };
 
-  return (
-    <Toolbar>
-      <Tooltip title="Add record">
-        <ToolbarButton onClick={handleClick}>
-          <AddIcon fontSize="small" />
-        </ToolbarButton>
-      </Tooltip>
-    </Toolbar>
-  );
-}
+//   return (
+//     <Toolbar>
+//       <Tooltip title="Add record">
+//         <ToolbarButton onClick={handleClick}>
+//           <AddIcon fontSize="small" />
+//         </ToolbarButton>
+//       </Tooltip>
+//     </Toolbar>
+//   );
+// }
 
 const StaffPage = () => {
-  const [rows, setRows] = useState(initialRows);
+  const [rows, setRows] = useState();
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
   const [searchText, setSearchText] = useState("");
-  const [filteredRows, setFilteredRows] = useState<GridRowsProp>(initialRows);
+  const [filteredRows, setFilteredRows] = useState<GridRowsProp>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get(`${BASE_URL}/api/users`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        // Transform the data to include id property
+        const transformedData = data.data.map((item) => ({
+          ...item,
+          id: item._id, // Add id property based on _id
+        }));
+
+        setRows(transformedData);
+        setFilteredRows(transformedData);
+        setError("");
+      } catch (err) {
+        console.error("Error fetching inventory:", err);
+        setError("Failed to load inventory data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStaff();
+  }, []);
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "Id", flex: 1 },
@@ -236,12 +242,13 @@ const StaffPage = () => {
   };
 
   const handleEditClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+    return navigate(`/users/edit/${id}`);
+    // setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
   };
 
-  const handleSaveClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  };
+  // const handleSaveClick = (id: GridRowId) => () => {
+  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+  // };
 
   const handleDeleteClick = (id: GridRowId) => () => {
     const newRows = rows.filter((row) => row.id !== id);
@@ -321,16 +328,6 @@ const StaffPage = () => {
           onRowModesModelChange={handleRowModesModelChange}
           onRowEditStop={handleRowEditStop}
           processRowUpdate={processRowUpdate}
-          slots={{ toolbar: EditToolbar }}
-          slotProps={{
-            toolbar: {
-              setRows,
-              setFilteredRows,
-              setRowModesModel,
-              clearSearch,
-            },
-          }}
-          showToolbar
         />
       </Box>
     </Sidebar>

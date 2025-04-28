@@ -1,37 +1,38 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Stack, TextField, TextFieldVariants } from "@mui/material";
-import { Control, Controller, FieldValues } from "react-hook-form";
-
+import React from "react";
 type FormInputProps = {
   name: string;
   label: string;
-  control: Control<FieldValues, any, FieldValues>;
+  value: string;
   type?: React.HTMLInputTypeAttribute;
   variant?: TextFieldVariants;
+  onChange?:
+    | React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>
+    | undefined;
+  disabled?: boolean | undefined;
 };
 
 const FormInput = ({
   name,
   label,
-  control,
+  value,
   type = "text",
   variant = "outlined",
+  onChange,
+  disabled,
 }: FormInputProps) => {
   return (
     <Stack mb={2}>
-      <Controller
+      <TextField
+        autoComplete="off"
+        variant={variant}
+        label={label}
+        type={type}
         name={name}
-        control={control}
-        render={({ field }) => (
-          <TextField
-            {...field}
-            autoComplete="off"
-            variant={variant}
-            label={label}
-            type={type}
-            required
-          />
-        )}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        required
       />
     </Stack>
   );

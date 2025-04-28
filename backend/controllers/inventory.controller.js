@@ -13,6 +13,25 @@ export const getAllProduct = async (req, res) => {
   }
 };
 
+export const getProduct = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await Inventory.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+    return res
+      .status(200)
+      .json({ success: true, message: "Success get data", data: product });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 export const createProduct = async (req, res) => {
   const product = req.body;
   if (

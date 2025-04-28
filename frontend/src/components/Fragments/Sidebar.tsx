@@ -18,6 +18,8 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import PersonIcon from "@mui/icons-material/Person";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@mui/material";
 
 const drawerWidth = 180;
 
@@ -84,6 +86,8 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 const Sidebar = ({ children }: { children: ReactNode }) => {
   const theme = useTheme();
   const [open, setOpen] = useState(true);
+  const navigate = useNavigate();
+  const isAuth = localStorage.getItem("token");
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -93,6 +97,15 @@ const Sidebar = ({ children }: { children: ReactNode }) => {
     setOpen(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/login");
+  };
+
+  if (!isAuth) return navigate("/login");
+  
   return (
     <Box bgcolor={"darkgrey"} height={"100dvh"} sx={{ display: "flex" }}>
       <CssBaseline />
@@ -113,8 +126,11 @@ const Sidebar = ({ children }: { children: ReactNode }) => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            Welcome, Hupian
+            Welcome, {JSON.parse(localStorage.getItem("user")).firstName}
           </Typography>
+          <Button color="inherit" onClick={handleLogout}>
+            Logout
+          </Button>
         </Toolbar>
       </AppBar>
       <Drawer

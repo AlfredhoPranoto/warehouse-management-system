@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.schema.js";
 
 export const loginStaff = async (req, res) => {
+  console.log("Login endpoint hit!", req.body);
   const { email, password } = req.body;
 
   if (!email || !password) {

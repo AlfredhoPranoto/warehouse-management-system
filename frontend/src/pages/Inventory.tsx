@@ -21,61 +21,14 @@ import {
   Toolbar,
   ToolbarButton,
 } from "@mui/x-data-grid";
-import { randomTraderName, randomId } from "@mui/x-data-grid-generator";
 import Sidebar from "../components/Fragments/Sidebar";
 import { TextField } from "@mui/material";
 import { useDebounce } from "../hooks/useDebounce";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const initialRows: GridRowsProp = [
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    description: "lorem ipsum",
-    price: 200000,
-    stock: 20,
-    warehouse : 'A'
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    description: "lorem ipsum",
-    price: 200000,
-    stock: 20,
-    warehouse : 'A'
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    description: "lorem ipsum",
-    price: 200000,
-    stock: 20,
-    warehouse : 'B'
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    description: "lorem ipsum",
-    price: 200000,
-    stock: 20,
-    warehouse : 'C'
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    description: "lorem ipsum",
-    price: 200000,
-    stock: 20,
-    warehouse : 'D'
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    description: "lorem ipsum",
-    price: 200000,
-    stock: 20,
-    warehouse : 'E'
-  },
-];
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 
 declare module "@mui/x-data-grid" {
   interface ToolbarPropsOverrides {
@@ -89,28 +42,31 @@ declare module "@mui/x-data-grid" {
 }
 
 function EditToolbar(props: GridSlotProps["toolbar"]) {
+  const navigate = useNavigate();
   const { setRows, setFilteredRows, setRowModesModel, clearSearch } = props;
 
   const handleClick = () => {
-    clearSearch();
+    return navigate('/inventory/create');
+    // clearSearch();
 
-    const id = randomId();
-    const newRow = {
-      id,
-      name: "",
-      description: "",
-      price: "",
-      stock: "",
-      warehouse:''
-    };
 
-    setRows((oldRows) => [...oldRows, newRow]);
-    setFilteredRows((oldRows) => [...oldRows, newRow]);
+    // const id = randomId();
+    // const newRow = {
+    //   id,
+    //   name: "",
+    //   description: "",
+    //   price: "",
+    //   stock: "",
+    //   warehouse: "",
+    // };
 
-    setRowModesModel((oldModel) => ({
-      ...oldModel,
-      [id]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
-    }));
+    // setRows((oldRows) => [...oldRows, newRow]);
+    // setFilteredRows((oldRows) => [...oldRows, newRow]);
+
+    // setRowModesModel((oldModel) => ({
+    //   ...oldModel,
+    //   [id]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
+    // }));
   };
 
   return (
@@ -124,12 +80,45 @@ function EditToolbar(props: GridSlotProps["toolbar"]) {
   );
 }
 
-
 const InventoryPage = () => {
-  const [rows, setRows] = useState(initialRows);
+  const navigate = useNavigate();
+  const [rows, setRows] = useState();
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
   const [searchText, setSearchText] = useState("");
-  const [filteredRows, setFilteredRows] = useState<GridRowsProp>(initialRows);
+  const [filteredRows, setFilteredRows] = useState<GridRowsProp>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Fetch inventory data
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get(`${BASE_URL}/api/inventory`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        
+        // Transform the data to include id property
+        const transformedData = data.data.map(item => ({
+          ...item,
+          id: item._id, // Add id property based on _id
+        }));
+        
+        setRows(transformedData);
+        setFilteredRows(transformedData);
+        setError("");
+      } catch (err) {
+        console.error("Error fetching inventory:", err);
+        setError("Failed to load inventory data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchInventory();
+  }, []);
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "SKU", flex: 1 },
@@ -177,7 +166,7 @@ const InventoryPage = () => {
       headerAlign: "left",
       align: "left",
       type: "singleSelect",
-      valueOptions:["A", "B", "C"],
+      valueOptions: ["A", "B", "C"],
     },
     {
       field: "actions",
@@ -270,14 +259,20 @@ const InventoryPage = () => {
   };
 
   const handleEditClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+    return navigate(`/inventory/edit/${id}`);
+    // setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
   };
 
-  const handleSaveClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  };
+  // const handleSaveClick = (id: GridRowId) => () => {
+  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+  // };
 
-  const handleDeleteClick = (id: GridRowId) => () => {
+  const handleDeleteClick = (id: GridRowId) => async () => {
+    await axios.delete(`${BASE_URL}/api/inventory/${id}`,{
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
     const newRows = rows.filter((row) => row.id !== id);
     setRows(newRows);
 
@@ -369,6 +364,6 @@ const InventoryPage = () => {
       </Box>
     </Sidebar>
   );
-}
+};
 
 export default InventoryPage;

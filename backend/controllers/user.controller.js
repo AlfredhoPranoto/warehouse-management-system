@@ -1,7 +1,7 @@
 import User from "../models/user.schema.js";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
-export const getStaff = async (req, res) => {
+export const getAllStaff = async (req, res) => {
   const staffs = await User.find({ role: "staff" }).select(
     "_id email firstName lastName age warehouse"
   );
@@ -16,6 +16,25 @@ export const getStaff = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+export const getStaff = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    return res
+      .status(200)
+      .json({ success: true, message: "Success get data", data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
