@@ -1,3 +1,6 @@
+# Check this repo for updated warehouse management system
+https://github.com/AlfredhoPranoto/warehouse-management-system-personal
+
 # Documentation
 https://documenter.getpostman.com/view/39406394/2sB2j1hXrb
 
